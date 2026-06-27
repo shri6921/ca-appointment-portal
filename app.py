@@ -7,6 +7,7 @@ from database import get_db_connection, init_db
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-ca-portal-key-change-in-prod'
+app.permanent_session_lifetime = datetime.timedelta(days=30)
 
 # Configure upload directory
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
@@ -15,6 +16,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Initialize DB on app startup
 init_db()
+
 
 def create_notification(user_id, message):
     try:
@@ -103,6 +105,7 @@ def login():
         conn.close()
 
         if user and check_password_hash(user['password_hash'], password):
+            session.permanent = True
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['user_role'] = user['role']
@@ -113,6 +116,7 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
