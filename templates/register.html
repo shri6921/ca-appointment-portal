@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - CA FinConnect{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper glass-card">
+    <div class="auth-header">
+        <h2>Create Account</h2>
+        <p>Join as a Client or Chartered Accountant</p>
+    </div>
+
+    <form action="{{ url_for('register') }}" method="POST">
+        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Select Role</label>
+        <div class="role-selector">
+            <div class="role-option selected" data-role="customer">
+                <h4>👤 Client</h4>
+                <p>Book CA Consultations</p>
+            </div>
+            <div class="role-option" data-role="ca">
+                <h4>📊 CA Professional</h4>
+                <p>Manage Client Bookings</p>
+            </div>
+        </div>
+        <input type="hidden" name="role" id="selectedRole" value="customer">
+
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="John Doe" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="john@example.com" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
+        </div>
+
+        <div id="caFields" style="display: none;">
+            <div class="form-group">
+                <label for="specialization">CA Specialization / Practice Area</label>
+                <input type="text" id="specialization" name="specialization" class="form-control" placeholder="e.g., Corporate Tax, GST Audit, Startup Advisory">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Account</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Already registered? <a href="{{ url_for('login') }}" style="color: var(--accent-blue); font-weight: 600;">Log in here</a>
+    </div>
+</div>
+{% endblock %}

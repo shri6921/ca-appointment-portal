@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CA Appointment Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="brand">
+                <div class="brand-icon">CA</div>
+                <span>FinConnect</span>
+            </a>
+            <ul class="nav-links">
+                {% if session.user_id %}
+                    <li class="nav-user">
+                        <span>👋 {{ session.user_name }}</span>
+                        <span class="role-badge {{ session.user_role }}">{{ session.user_role }}</span>
+                    </li>
+                    <li class="nav-notif-wrapper" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm" id="notifBtn" onclick="toggleNotifs()">
+                            🔔 <span id="notifBadge" class="badge" style="background: var(--accent-rose); color: white; border-radius: 10px; padding: 0.1rem 0.4rem; font-size: 0.75rem; {% if unread_count == 0 %}display:none;{% endif %}">{{ unread_count }}</span>
+                        </button>
+                        <div id="notifDropdown" class="glass-card" style="display: none; position: absolute; right: 0; top: 2.5rem; width: 300px; padding: 1rem; z-index: 1000; font-size: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                                <strong>Notifications</strong>
+                                <a href="#" onclick="markRead()" style="color: var(--accent-blue); font-size: 0.75rem;">Mark read</a>
+                            </div>
+                            <div id="notifList">
+                                {% for n in user_notifications %}
+                                    <div style="padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ n.message }}</div>
+                                {% else %}
+                                    <div style="color: var(--text-secondary); text-align: center; padding: 0.5rem;">No notifications yet</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    <li><a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">Dashboard</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn btn-primary">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 CA FinConnect Appointment Portal. Confidential & Secure Tax & Financial Services Platform.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

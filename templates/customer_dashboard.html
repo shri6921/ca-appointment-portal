@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Client Dashboard - CA FinConnect{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h2>Welcome, {{ session.user_name }}</h2>
+        <p style="color: var(--text-secondary);">Book consultations, upload tax documents, exchange notes, and manage payments.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon total">📋</div>
+        <div class="stat-info">
+            <h3>{{ appointments|length }}</h3>
+            <p>Total Appointments</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon pending">⏳</div>
+        <div class="stat-info">
+            <h3>{{ appointments | selectattr('status', 'equalto', 'Pending') | list | length }}</h3>
+            <p>Pending Approval</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon confirmed">✅</div>
+        <div class="stat-info">
+            <h3>{{ appointments | selectattr('status', 'equalto', 'Confirmed') | list | length }}</h3>
+            <p>Confirmed</p>
+        </div>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+    <h3 style="font-weight: 800;">Available Chartered Accountants</h3>
+    <div class="search-input-group" style="max-width: 350px;">
+        <input type="text" id="caSearchInput" class="form-control" placeholder="🔍 Search CA by name or practice (e.g. GST, Tax)..." onkeyup="filterCAs()">
+    </div>
+</div>
+
+<div class="ca-grid" id="caGrid">
+    {% for ca in cas %}
+    <div class="ca-card">
+        <div class="ca-info">
+            <h3>{{ ca.name }}</h3>
+            <div class="ca-spec">🎯 {{ ca.specialization or 'General Practice & Accounting' }}</div>
+            <div class="ca-contact">📞 {{ ca.phone or 'Contact details on booking' }} <br> ✉️ {{ ca.email }}</div>
+        </div>
+        <button class="btn btn-primary btn-book-ca" data-ca-id="{{ ca.id }}" data-ca-name="{{ ca.name }}">
+            📅 Book Appointment
+        </button>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary);">No Chartered Accountants registered yet.</p>
+    {% endfor %}
+</div>
+
+<h3 style="margin-bottom: 1rem; font-weight: 800;">My Consultations & Document Workspace</h3>
+<div class="glass-card table-responsive" style="padding: 1rem;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Appt ID</th>
+                <th>CA Name</th>
+                <th>Service & Scope</th>
+                <th>Date & Time</th>
+                <th>Document Vault</th>
+                <th>Discussion & Notes</th>
+                <th>Fee & Receipt</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr>
+                <td>#{{ appt.id }}</td>
+                <td><strong>{{ appt.ca_name }}</strong><br><small style="color: var(--text-secondary);">{{ appt.ca_email }}</small></td>
+                <td>
+                    <span style="color: var(--accent-blue); font-weight: 600;">{{ appt.service_type }}</span>
+                    <div class="work-details-box" style="margin-top: 0.4rem;">{{ appt.work_details }}</div>
+                </td>
+                <td>📅 {{ appt.appointment_date }}<br><small style="color: var(--text-secondary);">⏰ {{ appt.appointment_time }}</small></td>
+                <td>
+                    <div style="font-size: 0.85rem; margin-bottom: 0.4rem;">
+                        {% for doc in appt.documents %}
+                            <div style="margin-bottom: 0.2rem;">
+                                📎 <a href="{{ url_for('download_document', doc_id=doc.id) }}" style="color: var(--accent-blue); text-decoration: underline;">{{ doc.filename }}</a>
+                            </div>
+                        {% else %}
+                            <span style="color: var(--text-secondary);">No documents</span>
+                        {% endfor %}
+                    </div>
+                    <form action="{{ url_for('upload_document', appointment_id=appt.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.4rem;">
+                        <input type="file" name="document" style="font-size: 0.75rem; width: 120px; color: var(--text-secondary);" required>
+                        <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">Upload</button>
+                    </form>
+                </td>
+                <td>
+                    <div class="notes-box" style="max-width: 220px;">
+                        {% for n in appt.notes %}
+                            <div class="note-bubble"><strong>{{ n.sender_name }}:</strong> {{ n.note }}</div>
+                        {% else %}
+                            <div style="color: var(--text-secondary); font-size: 0.75rem; text-align: center;">No notes</div>
+                        {% endfor %}
+                    </div>
+                    <div style="display: flex; gap: 0.3rem;">
+                        <input type="text" id="noteInput_{{ appt.id }}" class="form-control" placeholder="Add note..." style="font-size: 0.75rem; padding: 0.3rem 0.5rem; width: 150px;">
+                        <button onclick="sendAppointmentNote({{ appt.id }})" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">💬</button>
+                    </div>
+                </td>
+                <td>
+                    {% if appt.fee_amount > 0 %}
+                        <div style="font-weight: 700; font-size: 0.95rem;">₹{{ "%.2f"|format(appt.fee_amount) }}</div>
+                        {% if appt.payment_status == 'Paid' %}
+                            <span class="status-badge status-confirmed" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">💰 Paid</span>
+                            <br><button onclick="viewReceipt({{ appt.id }}, '{{ appt.ca_name }}', '{{ session.user_name }}', '{{ appt.service_type }}', {{ appt.fee_amount }})" class="btn btn-secondary btn-sm" style="margin-top: 0.3rem; padding: 0.2rem 0.4rem; font-size: 0.75rem;">📄 Receipt</button>
+                        {% else %}
+                            <button onclick="openPayModal({{ appt.id }}, '{{ appt.service_type }}', {{ appt.fee_amount }})" class="btn btn-success btn-sm" style="margin-top: 0.3rem; padding: 0.3rem 0.6rem;">
+                                💳 Pay Now
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Pending quote</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if appt.status == 'Pending' %}
+                        <span class="status-badge status-pending">⏳ Pending</span>
+                    {% elif appt.status == 'Confirmed' %}
+                        <span class="status-badge status-confirmed">✅ Confirmed</span>
+                    {% elif appt.status == 'Completed' %}
+                        <span class="status-badge status-completed">🎉 Completed</span>
+                    {% else %}
+                        <span class="status-badge status-rejected">❌ Rejected</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                    You have no appointment bookings yet. Select a CA above to schedule one!
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal" id="bookModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Book Appointment with <span id="modalCaName" style="color: var(--accent-blue);"></span></h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form action="{{ url_for('book_appointment') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="ca_id" id="modalCaId">
+            
+            <div class="form-group">
+                <label for="service_type">Select Service Needed</label>
+                <select name="service_type" id="service_type" class="form-control" required>
+                    <option value="Income Tax Return (ITR)">Income Tax Return (ITR) Filing</option>
+                    <option value="GST Audit & Compliance">GST Audit & Compliance</option>
+                    <option value="Company Incorporation">Company Registration & Incorporation</option>
+                    <option value="Financial Audit">Financial Audit & Accounting</option>
+                    <option value="Business Tax Advisory">Business Tax & Advisory</option>
+                    <option value="Other Consulting">Other Custom Consulting</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="appointment_date">Preferred Date</label>
+                    <input type="date" id="appointment_date" name="appointment_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointment_time">Preferred Time</label>
+                    <input type="time" id="appointment_time" name="appointment_time" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="work_details">What actually is the work? (Provide Scope & Context)</label>
+                <textarea id="work_details" name="work_details" rows="3" class="form-control" placeholder="Describe the specifics (e.g. FY 2024-25 ITR filing with capital gains calculation, GST mismatch resolution...)" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="document">Attach Financial Documents (Form 16, Bank Statement, PAN...)</label>
+                <input type="file" id="document" name="document" class="form-control" style="padding: 0.5rem;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Confirm & Submit Booking</button>
+        </form>
+    </div>
+</div>
+
+<!-- Simulated Payment Gateway Modal -->
+<div class="modal" id="payModal">
+    <div class="modal-content" style="max-width: 440px;">
+        <div class="modal-header">
+            <h3>🔒 Secure Payment Gateway</h3>
+            <button class="modal-close" onclick="closePayModal()">&times;</button>
+        </div>
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="color: var(--text-secondary); font-size: 0.9rem;" id="payServiceName">Consultation Service</div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--accent-emerald); margin: 0.5rem 0;" id="payAmountDisplay">₹0.00</div>
+        </div>
+        <div class="form-group">
+            <label>Payment Method</label>
+            <select class="form-control">
+                <option>💳 Credit / Debit Card (Simulated)</option>
+                <option>📱 UPI Instant Pay (Google Pay / PhonePe)</option>
+                <option>🏦 Net Banking</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Card / UPI ID (Test Demo)</label>
+            <input type="text" class="form-control" value="4111 •••• •••• 1111" readonly>
+        </div>
+        <button type="button" id="paySubmitBtn" onclick="submitPaymentSim()" class="btn btn-success" style="width: 100%; margin-top: 1rem; padding: 0.8rem;">
+            Pay Now
+        </button>
+    </div>
+</div>
+{% endblock %}
