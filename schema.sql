@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT NOT NULL CHECK(role IN ('customer', 'ca')),
     phone TEXT,
     specialization TEXT, -- Only for CA
+    pan_number TEXT,
+    gstin_number TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,10 +35,13 @@ CREATE TABLE IF NOT EXISTS appointment_documents (
     filename TEXT NOT NULL,
     filepath TEXT NOT NULL,
     uploaded_by INTEGER NOT NULL,
+    is_approved INTEGER DEFAULT 0,
+    approved_at TIMESTAMP,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (appointment_id) REFERENCES appointments (id) ON DELETE CASCADE,
     FOREIGN KEY (uploaded_by) REFERENCES users (id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

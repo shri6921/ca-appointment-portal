@@ -6,7 +6,7 @@
 <div class="dashboard-header">
     <div>
         <h2>CA Workspace: {{ session.user_name }}</h2>
-        <p style="color: var(--text-secondary);">Manage client engagements, review tax documents, post discussion notes, and invoice consulting fees.</p>
+        <p style="color: var(--text-secondary);">Manage client engagements, verify PAN/GSTIN IDs, review tax documents, post discussion notes, and invoice consulting fees.</p>
     </div>
 </div>
 
@@ -46,7 +46,7 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Client Name & Contact</th>
+                <th>Client Contact & Verified IDs</th>
                 <th>Service & Work Scope</th>
                 <th>Scheduled Date & Time</th>
                 <th>Client Documents & Shared Files</th>
@@ -63,6 +63,10 @@
                     <strong>{{ appt.customer_name }}</strong><br>
                     <small style="color: var(--text-secondary);">📞 {{ appt.customer_phone or 'N/A' }}</small><br>
                     <small style="color: var(--text-secondary);">✉️ {{ appt.customer_email }}</small>
+                    <div style="margin-top: 0.4rem; font-size: 0.75rem; background: rgba(11, 15, 25, 0.5); padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <div><strong>PAN:</strong> {{ appt.customer_pan or 'Not uploaded' }}</div>
+                        <div><strong>GSTIN:</strong> {{ appt.customer_gstin or 'N/A' }}</div>
+                    </div>
                 </td>
                 <td>
                     <span style="color: var(--accent-blue); font-weight: 600;">{{ appt.service_type }}</span>
@@ -75,8 +79,11 @@
                 <td>
                     <div style="font-size: 0.85rem; margin-bottom: 0.4rem;">
                         {% for doc in appt.documents %}
-                            <div style="margin-bottom: 0.2rem;">
+                            <div style="margin-bottom: 0.4rem; background: rgba(11, 15, 25, 0.4); padding: 0.4rem; border-radius: 6px; border: 1px solid var(--border-color);">
                                 📎 <a href="{{ url_for('download_document', doc_id=doc.id) }}" style="color: var(--accent-blue); text-decoration: underline;">{{ doc.filename }}</a>
+                                {% if doc.is_approved %}
+                                    <div style="color: var(--accent-emerald); font-size: 0.72rem; font-weight: 700; margin-top: 0.2rem;">✍️ Client Signed & Approved</div>
+                                {% endif %}
                             </div>
                         {% else %}
                             <span style="color: var(--text-secondary);">No files uploaded</span>
@@ -88,7 +95,7 @@
                     </form>
                 </td>
                 <td>
-                    <div class="notes-box" style="max-width: 220px;">
+                    <div class="notes-box" style="max-width: 200px;">
                         {% for n in appt.notes %}
                             <div class="note-bubble"><strong>{{ n.sender_name }}:</strong> {{ n.note }}</div>
                         {% else %}
@@ -96,7 +103,7 @@
                         {% endfor %}
                     </div>
                     <div style="display: flex; gap: 0.3rem;">
-                        <input type="text" id="noteInput_{{ appt.id }}" class="form-control" placeholder="Add note..." style="font-size: 0.75rem; padding: 0.3rem 0.5rem; width: 150px;">
+                        <input type="text" id="noteInput_{{ appt.id }}" class="form-control" placeholder="Add note..." style="font-size: 0.75rem; padding: 0.3rem 0.5rem; width: 140px;">
                         <button onclick="sendAppointmentNote({{ appt.id }})" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">💬</button>
                     </div>
                 </td>

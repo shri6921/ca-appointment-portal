@@ -87,6 +87,57 @@ async function markRead() {
     }
 }
 
+// AI Tax Assistant Bot Toggle
+function toggleTaxBot() {
+    const bot = document.getElementById('taxBotWindow');
+    if (bot) {
+        bot.style.display = bot.style.display === 'none' ? 'flex' : 'none';
+    }
+}
+
+async function sendTaxQuery() {
+    const input = document.getElementById('taxQueryInput');
+    const query = input.value.trim();
+    if (!query) return;
+
+    const body = document.getElementById('taxBotBody');
+    body.innerHTML += `<div style="text-align: right; margin-bottom: 0.5rem;"><span style="background: var(--accent-indigo); color: white; padding: 0.4rem 0.8rem; border-radius: 12px; font-size: 0.8rem; display: inline-block;">${query}</span></div>`;
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+
+    try {
+        const response = await fetch('/api/tax_assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query })
+        });
+        const data = await response.json();
+        const formattedReply = data.reply.replace(/\n/g, '<br>');
+        body.innerHTML += `<div style="text-align: left; margin-bottom: 0.5rem;"><span style="background: rgba(255,255,255,0.08); color: var(--text-primary); padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.8rem; display: inline-block; border: 1px solid var(--border-color);">${formattedReply}</span></div>`;
+        body.scrollTop = body.scrollHeight;
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// e-Sign Document Approval
+async function approveDocument(docId) {
+    if (!confirm('Are you sure you want to digitally sign & approve this audit document?')) return;
+    try {
+        const response = await fetch(`/document/${docId}/approve`, { method: 'POST' });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            alert('🎉 Document digitally signed and verified!');
+            window.location.reload();
+        } else {
+            alert(data.error || 'Approval failed.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Error approving document.');
+    }
+}
+
 // Appointment Notes / Discussion Thread
 async function sendAppointmentNote(appointmentId) {
     const input = document.getElementById(`noteInput_${appointmentId}`);

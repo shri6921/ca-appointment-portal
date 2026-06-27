@@ -66,6 +66,31 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Floating AI Tax Helper Chatbot Widget -->
+    <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 999;">
+        <button onclick="toggleTaxBot()" class="btn btn-primary" style="border-radius: 50px; padding: 0.8rem 1.4rem; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); font-weight: 700;">
+            🤖 AI Tax Assistant
+        </button>
+
+        <div id="taxBotWindow" class="glass-card" style="display: none; position: absolute; bottom: 4rem; right: 0; width: 340px; height: 420px; flex-direction: column; padding: 1.2rem; margin: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.6rem; margin-bottom: 0.8rem;">
+                <strong style="color: var(--accent-blue);">🤖 AI Tax Assistant</strong>
+                <button onclick="toggleTaxBot()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+            </div>
+            <div id="taxBotBody" style="flex: 1; overflow-y: auto; margin-bottom: 0.8rem; padding-right: 0.3rem;">
+                <div style="text-align: left; margin-bottom: 0.5rem;">
+                    <span style="background: rgba(255,255,255,0.08); color: var(--text-primary); padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.8rem; display: inline-block; border: 1px solid var(--border-color);">
+                        Hello! Ask me about Old vs New Tax Regime, 80C deductions, GST return deadlines, or ITR filing!
+                    </span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.4rem;">
+                <input type="text" id="taxQueryInput" class="form-control" placeholder="Ask tax question..." style="font-size: 0.8rem; padding: 0.5rem;" onkeypress="if(event.key==='Enter') sendTaxQuery()">
+                <button onclick="sendTaxQuery()" class="btn btn-primary btn-sm">Send</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 CA FinConnect Platform. Designed & Developed by <strong>Shrinath Shrimangale</strong>. Confidential & Secure Tax Portal.</p>
     </footer>

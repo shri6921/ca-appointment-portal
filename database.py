@@ -25,6 +25,23 @@ def init_db():
     if 'payment_status' not in columns:
         cursor.execute("ALTER TABLE appointments ADD COLUMN payment_status TEXT DEFAULT 'Unpaid'")
 
+    # Migration check for users (pan_number, gstin_number)
+    cursor.execute("PRAGMA table_info(users)")
+    u_cols = [c[1] for c in cursor.fetchall()]
+    if 'pan_number' not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN pan_number TEXT")
+    if 'gstin_number' not in u_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN gstin_number TEXT")
+
+    # Migration check for appointment_documents (is_approved, approved_at)
+    cursor.execute("PRAGMA table_info(appointment_documents)")
+    d_cols = [c[1] for c in cursor.fetchall()]
+    if 'is_approved' not in d_cols:
+        cursor.execute("ALTER TABLE appointment_documents ADD COLUMN is_approved INTEGER DEFAULT 0")
+    if 'approved_at' not in d_cols:
+        cursor.execute("ALTER TABLE appointment_documents ADD COLUMN approved_at TIMESTAMP")
+
+
     # Seed default CA accounts if empty
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'ca'")
     ca_count = cursor.fetchone()[0]
