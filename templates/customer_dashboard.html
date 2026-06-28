@@ -3,6 +3,9 @@
 {% block title %}Client Dashboard - CA FinConnect{% endblock %}
 
 {% block content %}
+<!-- Razorpay Checkout JavaScript SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <div class="dashboard-header">
     <div>
         <h2>Welcome, {{ session.user_name }}</h2>
@@ -113,7 +116,7 @@
                 <th>Date & Time</th>
                 <th>Document Vault & e-Sign</th>
                 <th>Discussion & Notes</th>
-                <th>Fee & Receipt</th>
+                <th>Fee & Razorpay</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -167,8 +170,8 @@
                             <span class="status-badge status-confirmed" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">💰 Paid</span>
                             <br><button onclick="viewReceipt({{ appt.id }}, '{{ appt.ca_name }}', '{{ session.user_name }}', '{{ appt.service_type }}', {{ appt.fee_amount }})" class="btn btn-secondary btn-sm" style="margin-top: 0.3rem; padding: 0.2rem 0.4rem; font-size: 0.75rem;">📄 Receipt</button>
                         {% else %}
-                            <button onclick="openPayModal({{ appt.id }}, '{{ appt.service_type }}', {{ appt.fee_amount }})" class="btn btn-success btn-sm" style="margin-top: 0.3rem; padding: 0.3rem 0.6rem;">
-                                💳 Pay Now
+                            <button onclick="payWithRazorpay({{ appt.id }}, '{{ appt.service_type }}', {{ appt.fee_amount }}, '{{ session.user_name }}', '{{ session.user_email }}', '{{ razorpay_key_id }}')" class="btn btn-success btn-sm" style="margin-top: 0.3rem; padding: 0.35rem 0.7rem; background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
+                                💳 Pay via Razorpay
                             </button>
                         {% endif %}
                     {% else %}
@@ -243,35 +246,6 @@
 
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Confirm & Submit Booking</button>
         </form>
-    </div>
-</div>
-
-<!-- Simulated Payment Gateway Modal -->
-<div class="modal" id="payModal">
-    <div class="modal-content" style="max-width: 440px;">
-        <div class="modal-header">
-            <h3>🔒 Secure Payment Gateway</h3>
-            <button class="modal-close" onclick="closePayModal()">&times;</button>
-        </div>
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <div style="color: var(--text-secondary); font-size: 0.9rem;" id="payServiceName">Consultation Service</div>
-            <div style="font-size: 2rem; font-weight: 800; color: var(--accent-emerald); margin: 0.5rem 0;" id="payAmountDisplay">₹0.00</div>
-        </div>
-        <div class="form-group">
-            <label>Payment Method</label>
-            <select class="form-control">
-                <option>💳 Credit / Debit Card (Simulated)</option>
-                <option>📱 UPI Instant Pay (Google Pay / PhonePe)</option>
-                <option>🏦 Net Banking</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Card / UPI ID (Test Demo)</label>
-            <input type="text" class="form-control" value="4111 •••• •••• 1111" readonly>
-        </div>
-        <button type="button" id="paySubmitBtn" onclick="submitPaymentSim()" class="btn btn-success" style="width: 100%; margin-top: 1rem; padding: 0.8rem;">
-            Pay Now
-        </button>
     </div>
 </div>
 {% endblock %}
